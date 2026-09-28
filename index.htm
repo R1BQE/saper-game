@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Игра сапёр</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; background: #f2f2f2; color: #111; }
+#game { margin-top: 20px; padding: 20px; border: 2px solid #444; background: white; }
+#visual { display: grid; gap: 2px; justify-content: center; margin-top: 10px; font-family: monospace; }
+.cell { display: flex; align-items: center; justify-content: center; font-family: monospace; font-weight: bold; border-radius: 3px; cursor: pointer; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+@media (max-width: 480px) { .cell { width: 32px; height: 32px; font-size: 14px; } }
+@media (min-width: 481px) and (max-width: 768px) { .cell { width: 36px; height: 36px; font-size: 16px; } }
+@media (min-width: 769px) { .cell { width: 40px; height: 40px; font-size: 18px; } }
+.cell.closed { background: #2196f3; border: 1px solid #1565c0; }
+.cell.open { background: #e0e0e0; border: 1px solid #bdbdbd; }
+.cell.mine { background: #f44336; border: 1px solid #c62828; }
+.cell.defused { background: #fff9c4; border: 1px solid #f9a825; }
+.cell.cursor { outline: 3px solid #ffeb3b; outline-offset: -2px; }
+.cell.cursor.open { outline-color: #f9a825; }
+.cell.cursor.mine { outline-color: #ffeb3b; }
+.cell.cursor.defused { outline-color: #f57f17; }
+.cell:active { transform: scale(0.92); }
+#rules { max-width: 360px; margin: 0 auto 16px; text-align: left; }
+#rules h2 { font-size: 18px; margin: 20px 0 8px; }
+#rules details { border: 1px solid #bbb; border-radius: 4px; background: white; margin-bottom: 6px; }
+#rules summary { padding: 10px; font-weight: bold; cursor: pointer; }
+#rules details[open] summary { border-bottom: 1px solid #ddd; }
+#rules .body { padding: 10px; }
+#rules ul { margin: 0; padding-left: 20px; }
+#rules li { margin-bottom: 6px; }
+#rules dl { margin: 0; }
+#rules dt { font-weight: bold; margin-top: 8px; }
+#rules dd { margin: 2px 0 0 0; }
+kbd { font-family: monospace; background: #eee; border: 1px solid #bbb; border-radius: 3px; padding: 1px 5px; }
+.cell.num-1 { color: #1976d2; }
+.cell.num-2 { color: #388e3c; }
+.cell.num-3 { color: #d32f2f; }
+.cell.num-4 { color: #0d47a1; }
+.cell.num-5 { color: #b71c1c; }
+.cell.num-6 { color: #00838f; }
+.cell.num-7 { color: #212121; }
+.cell.num-8 { color: #757575; }
+#status { margin-top: 20px; font-weight: bold; }
+#restartBtn { margin-top: 20px; padding: 10px; font-size: 16px; }
+#live { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<h1>Игра сапёр</h1>
+<div id="intro">
+<div id="rules">
+<details open>
+<summary>Правила игры</summary>
+<div class="body">
+<p>Правила простые: чтобы выиграть, нужно разминировать все 10 мин. Поле 10 на 10, то есть 100 клеток, из них 10 заминированы.</p>
+<p>Открытая клетка без мины показывает, сколько мин стоит рядом — в восьми соседних клетках. Если рядом мин нет, клетка пустая, и такие клетки удобно открывать первыми: они дают больше всего информации.</p>
+<p>Ошиблись — игра заканчивается сразу. Ошибиться можно двумя способами: открыть клетку с миной или попытаться разминировать клетку, где мины нет. Оба хода одинаково смертельны.</p>
+<p>Мины расставляются случайно перед каждой партией, запомнить их нельзя. Время игры показывается в конце партии.</p>
+</div>
+</details>
+</div>
+
+<h2>Управление</h2>
+
+<details>
+<summary>Клавиатура</summary>
+<div class="body">
+<dl>
+<dt>Стрелки вверх, вниз, влево, вправо</dt>
+<dd>Перемещают курсор по полю на одну клетку. Курсор — это толстая жёлтая рамка вокруг клетки. При перемещении клетка сразу проговаривается.</dd>
+<dt>Ctrl вместе со стрелкой</dt>
+<dd>Прыжок к краю поля в этом направлении: Ctrl со стрелкой вниз — в самый низ, Ctrl со стрелкой вправо — в самый правый столбец.</dd>
+<dt>Пробел</dt>
+<dd>Открывает клетку под курсором. Это основной ход, им вы разведываете поле.</dd>
+<dt>Enter</dt>
+<dd>Разминирует клетку под курсором. Вы ставите флажок на клетку, где, по вашему мнению, стоит мина. За партию нужно обезвредить все 10 мин.</dd>
+<dt>P или русская З</dt>
+<dd>Повторяет последний ход: заново проговаривает текущую клетку и звук, который был при последнем действии.</dd>
+<dt>T или русская Е</dt>
+<dd>Проговаривает, сколько времени идёт партия.</dd>
+</dl>
+</div>
+</details>
+
+<details>
+<summary>Мышь</summary>
+<div class="body">
+<dl>
+<dt>Одиночный щелчок левой кнопкой</dt>
+<dd>Открывает клетку. То же самое, что Пробел на клавиатуре.</dd>
+<dt>Щелчок правой кнопкой</dt>
+<dd>Разминирует клетку, ставит флажок. То же самое, что Enter.</dd>
+<dt>Курсор мыши следует за клавиатурой</dt>
+<dd>Работают вместе: можно щёлкнуть по клетке, а дальше двигаться стрелками, или наоборот — подвести курсор стрелками и щёлкнуть.</dd>
+</dl>
+</div>
+</details>
+
+<details>
+<summary>Жесты</summary>
+<div class="body">
+<dl>
+<dt>Короткое касание</dt>
+<dd>Открывает клетку. Палец касается и сразу отпускается, как при обычном нажатии на кнопку.</dd>
+<dt>Касание с удержанием</dt>
+<dd>Разминирует клетку. Удерживайте палец на клетке не меньше половины секунды, не сдвигая его с места. Отпустите — на клетке появится флажок.</dd>
+<dt>Сдвиг пальца во время касания</dt>
+<dd>Отменяет ход. Если палец уехал от места касания дальше чем на 12 точек, действие не выполняется: так прокрутка поля пальцем не приводит к случайному ходу.</dd>
+</dl>
+</div>
+</details>
+
+<details>
+<summary>Поддержка скринридеров</summary>
+<div class="body">
+<p>Игра рассчитана на работу со скринридерами: NVDA на компьютере, VoiceOver на айфоне, TalkBack на Android. Вся информация о клетке произносится словами, поле не нужно видеть.</p>
+<dl>
+<dt>Что произносится про каждую клетку</dt>
+<dd>Координата и состояние: «Б4 закрыто», «Б4 рядом мин 3», «Б4 мин рядом нет», «Б4 обезврежено». Координата — это буква столбца и номер строки, отсчёт с левого верхнего угла.</dd>
+<dt>Столбцы обозначаются латинскими буквами</dt>
+<dd>Поле 10 на 10, столбцы A B C D E F G H I J, строки с 1 по 10. То есть левая верхняя клетка — A1, правая нижняя — J10.</dd>
+<dt>Роль клеток</dt>
+<dd>Каждая клетка объявлена кнопкой, к ней можно наводить фокус скринридером напрямую и активировать обычным для вашего скринридера способом. Перемещаться можно и стрелками скурсором игры, и обычной навигацией по элементам.</dd>
+<dt>Объявление результата</dt>
+<dd>Начало и конец партии проговариваются отдельным сообщением: «Игра началась», «Победа. Время N мин N сек», а при ошибке — какая именно клетка её вызвала, например «Ошибка разминирования Б4. Игра окончена».</dd>
+<dt>Звуки вместо слов</dt>
+<dd>Открытие, разминирование, ошибка и взрыв озвучиваются разными звуками, так что слышно, что произошло, не дожидаясь речи.</dd>
+</dl>
+</div>
+</details>
+
+<button id="startBtn">Начать игру</button>
+</div>
+<div id="game" role="application" tabindex="0" aria-label="Игровое поле" hidden>
+<div id="visual" role="group" aria-label="Игровое поле, 10 на 10"></div>
+</div>
+<div id="status"></div>
+<button id="restartBtn" hidden>Начать новую игру</button>
+<div id="live" aria-live="assertive"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
