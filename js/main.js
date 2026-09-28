@@ -3,7 +3,7 @@
  */
 import { initRenderer } from './ui-renderer.js';
 import { initInputHandler } from './input-handler.js';
-import { initAnnouncer } from './announcer.js';
+import { initAnnouncer, initTimerDisplay } from './announcer.js';
 import { preloadSounds } from './audio.js';
 import { startGame } from './game-flow.js';
 
@@ -12,7 +12,9 @@ const visual = document.getElementById('visual');
 const live = document.getElementById('live');
 const statusDiv = document.getElementById('status');
 const restartBtn = document.getElementById('restartBtn');
+const homeBtn = document.getElementById('homeBtn');
 const startBtn = document.getElementById('startBtn');
+const timerEl = document.getElementById('timer');
 
 // Инициализация модулей
 function init() {
@@ -20,10 +22,11 @@ function init() {
     preloadSounds();
 
     // Инициализация рендерера
-    initRenderer(visual, statusDiv, restartBtn);
+    initRenderer(visual, statusDiv, restartBtn, homeBtn);
 
     // Инициализация озвучки
     initAnnouncer(live);
+    initTimerDisplay(timerEl);
 
     // Инициализация ввода
     initInputHandler(visual);
@@ -31,6 +34,9 @@ function init() {
     // Кнопки
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);
+    // «На главную» — полная перезагрузка: экран возвращается в исходное
+    // состояние целиком, вместе со свёрнутыми правилами и заголовком игры.
+    homeBtn.addEventListener('click', () => location.reload());
 
     // Фокус на стартовой кнопке
     startBtn.focus();

@@ -9,11 +9,13 @@ const { size, letters } = getConfig();
 let visualContainer = null;
 let statusDiv = null;
 let restartBtn = null;
+let homeBtn = null;
 
-export function initRenderer(visualEl, statusEl, restartEl) {
+export function initRenderer(visualEl, statusEl, restartEl, homeEl) {
     visualContainer = visualEl;
     statusDiv = statusEl;
     restartBtn = restartEl;
+    homeBtn = homeEl;
 }
 
 export function drawVisual() {
@@ -79,16 +81,36 @@ export function updateStatus(text) {
     }
 }
 
+/**
+ * Заголовок над полем. Одна и та же зона служит двум целям: до партии —
+ * название игры, после партии — результат. Так результат оказывается
+ * первым, что попадает в фокус чтения, и не нужно искать его под полем.
+ */
+export function setHeading(text) {
+    const h = document.getElementById('gameHeading');
+    if (h) h.textContent = text;
+}
+
+/**
+ * Куда вернуть фокус после партии. Кнопка «на главную» предпочтительнее:
+ * перезагрузка страницы возвращает экран в исходное состояние целиком,
+ * вместе с правилами. Фокус на «новую партию» оставляем как запасной
+ * вариант, если кнопки главной на странице нет.
+ */
 export function showRestartButton() {
-    if (restartBtn) {
-        restartBtn.hidden = false;
-        restartBtn.focus();
+    const target = homeBtn || restartBtn;
+    if (target) {
+        target.hidden = false;
+        target.focus();
     }
 }
 
 export function hideRestartButton() {
     if (restartBtn) {
         restartBtn.hidden = true;
+    }
+    if (homeBtn) {
+        homeBtn.hidden = true;
     }
 }
 

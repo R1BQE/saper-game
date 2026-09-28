@@ -10,11 +10,25 @@ const sounds = {
 };
 
 export function playSound(name) {
+    if (name === "win") {
+        stopWinSound();
+    }
     if (!sounds[name]) {
         return;
     }
     sounds[name].currentTime = 0;
     sounds[name].play().catch(() => {});
+}
+
+/**
+ * Глушит звук победы. Фанфары длятся несколько секунд, и без этого
+ * они перекрывают речь и звуки новой партии, начатой сразу после победы.
+ */
+export function stopWinSound() {
+    const win = sounds.win;
+    if (!win) return;
+    win.pause();
+    win.currentTime = 0;
 }
 
 export function preloadSounds() {
