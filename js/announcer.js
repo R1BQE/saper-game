@@ -85,9 +85,17 @@ export function announceGameStart() {
     announce("Игра началась");
 }
 
-export function announceLose(message) {
+/**
+ * Звук взрыва играется только на проигрыше от мины: на ошибке разминирования
+ * (тоже проигрыш, но не взрыв) звучит отдельный "wrong" из game-flow, и пара
+ * "wrong" + "mine" сливалась в двойной звук.
+ */
+export function announceLose(message, explosionSound) {
     const time = getElapsedTime();
     announce(message + ". Игра окончена. Время " + time);
+    if (explosionSound) {
+        playSound("mine");
+    }
 }
 
 export function announceWin() {

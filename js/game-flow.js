@@ -65,7 +65,6 @@ export function openCell() {
     }
 
     if (c.mine) {
-        playSound('mine');
         lose('Мина в ' + letters[cursorX] + (cursorY + 1),
              'Вы открыли клетку ' + letters[cursorX] + (cursorY + 1) +
              ', а в ней мина.');
@@ -92,7 +91,8 @@ export function defuseCell() {
         playSound('wrong');
         lose('Ошибка разминирования ' + letters[cursorX] + (cursorY + 1),
              'Вы разминировали клетку ' + letters[cursorX] + (cursorY + 1) +
-             ', но мины там не было.');
+             ', но мины там не было.',
+             true);
         return;
     }
 
@@ -104,7 +104,7 @@ export function defuseCell() {
     checkWin();
 }
 
-function lose(shortMessage, detail) {
+function lose(shortMessage, detail, explosionSound) {
     setGameOver(true);
     stopTimer();
     revealMines();
@@ -119,7 +119,7 @@ function lose(shortMessage, detail) {
     drawVisual();
     showRestartButton();
 
-    announceLose(shortMessage);
+    announceLose(shortMessage, explosionSound);
 }
 
 function revealMines() {
